@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校正 ｜ ホラーノベル</title>
+<style>
+  :root{
+    --ink:#17120d;
+    --paper:#efe6d1;
+    --paper-dim:#e6dcc4;
+    --memo:#e9e5da;
+    --red:#a33327;
+    --bg:#0b0a09;
+    --fg:#c9c1af;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    background-image:radial-gradient(ellipse at 50% 30%, #16130f 0%, #0b0a09 70%);
+    color:var(--fg);
+    font-family:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  section{display:none;width:100%;height:100%;align-items:center;justify-content:center;flex-direction:column;}
+  section.on{display:flex;}
+
+  /* ---------- title ---------- */
+  #s-title{overflow-y:auto;}
+  #s-title h1{
+    writing-mode:vertical-rl;
+    font-size:clamp(44px,9vw,76px);
+    letter-spacing:.35em;
+    color:#ddd3bd;
+    text-shadow:0 0 30px rgba(0,0,0,.9);
+    font-weight:600;
+  }
+  #s-title .sub{margin-top:20px;font-size:14px;letter-spacing:.5em;color:#8a8172;}
+  #s-title .pub{margin-top:8px;font-size:12px;letter-spacing:.3em;color:#5d564a;}
+  #inbox{
+    margin-top:34px;display:flex;gap:18px;flex-wrap:wrap;justify-content:center;
+    padding:0 4vw 30px;
+  }
+  .card{
+    width:180px;padding:20px 18px 16px;
+    background:linear-gradient(175deg,#252017 0%,#1a1611 60%,#141109 100%);
+    border:1px solid #4a4335;
+    cursor:pointer;transition:transform .2s, border-color .2s;
+    text-align:center;
+  }
+  .card:hover{transform:translateY(-4px);border-color:#8a8172;}
+  .card .c-no{font-size:11px;letter-spacing:.4em;color:#7a7263;margin-bottom:12px;}
+  .card .c-title{font-size:20px;letter-spacing:.2em;color:#ddd3bd;margin-bottom:8px;}
+  .card .c-auth{font-size:12px;letter-spacing:.15em;color:#8a8172;margin-bottom:14px;}
+  .card .c-ends{display:flex;gap:6px;justify-content:center;font-size:11px;letter-spacing:.1em;}
+  .card .c-ends span{border:1px solid #3a352c;padding:3px 7px;color:#4a4438;}
+  .card .c-ends span.got{color:#c9c1af;border-color:#6b6353;background:#171410;}
+  .card.locked{cursor:default;opacity:.45;}
+  .card.locked:hover{transform:none;border-color:#4a4335;}
+  #all-done{margin-top:6px;font-size:12px;letter-spacing:.3em;color:#8a8172;min-height:1.4em;}
+
+  button{
+    font-family:inherit;
+    background:#1c1813;color:#cfc6b2;
+    border:1px solid #4a4335;
+    padding:12px 34px;font-size:15px;letter-spacing:.3em;text-indent:.3em;
+    cursor:pointer;transition:background .2s,color .2s;
+  }
+  button:hover{background:#2b251d;color:#efe6d1;}
+  button:disabled{opacity:.35;cursor:default;}
+
+  /* ---------- memo ---------- */
+  .memo{
+    width:min(92vw,600px);
+    background:linear-gradient(175deg,#ece8dd 0%,var(--memo) 55%,#ddd8ca 100%);
+    color:#33302a;
+    padding:38px 44px 34px;
+    box-shadow:0 18px 60px rgba(0,0,0,.75);
+    position:relative;
+    line-height:2;
+    font-size:15px;
+    max-height:86vh;overflow-y:auto;
+  }
+  .memo .head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:1px solid #9d9581;padding-bottom:8px;margin-bottom:20px;
+    font-size:13px;letter-spacing:.2em;color:#6d6555;
+  }
+  .memo .stamp{
+    position:absolute;top:22px;right:26px;
+    width:44px;height:44px;border:2px solid rgba(163,51,39,.65);border-radius:6px;
+    color:rgba(163,51,39,.7);font-size:22px;display:flex;align-items:center;justify-content:center;
+    transform:rotate(6deg);pointer-events:none;
+  }
+  .memo p{margin-bottom:1em;}
+  .memo .rule{margin-left:1em;color:#57503f;}
+  .memo .memo-actions{margin-top:26px;text-align:center;}
+  .memo input{
+    font-family:inherit;font-size:16px;letter-spacing:.15em;
+    background:transparent;border:none;border-bottom:1px solid #8d8570;
+    padding:6px 4px;width:220px;color:#2a2620;outline:none;text-align:center;
+  }
+  .bar{
+    background:linear-gradient(180deg,#221c15,#0f0c09);
+    color:transparent;border-radius:1px;padding:0 .15em;cursor:pointer;
+    transition:color .15s;user-select:none;
+  }
+  .bar.reveal{color:#efe6d1;}
+
+  /* ---------- game ---------- */
+  #directive{
+    width:min(92vw,660px);
+    font-size:13px;letter-spacing:.15em;line-height:1.8;
+    color:#9a9180;margin-bottom:14px;
+    border-left:3px solid #4a4335;padding-left:14px;
+  }
+  #directive b{color:#c9bfa8;font-weight:600;}
+  #paper{
+    writing-mode:vertical-rl;
+    width:min(92vw,660px);
+    height:min(62vh,500px);
+    background:
+      repeating-linear-gradient(to left, rgba(120,100,70,.14) 0 1px, transparent 1px 46px),
+      linear-gradient(170deg,#f2ead6 0%,var(--paper) 50%,var(--paper-dim) 100%);
+    color:var(--ink);
+    box-shadow:0 20px 70px rgba(0,0,0,.8), inset 0 0 60px rgba(140,110,70,.12);
+    padding:34px 38px;
+    font-size:clamp(16px,2.6vw,19px);
+    line-height:46px;
+    letter-spacing:.06em;
+    overflow-x:auto;overflow-y:hidden;
+  }
+  .tok{border-radius:1px;transition:background .5s;}
+  .tok.hit{cursor:pointer;transition:background .18s;}
+  .tok.hit:hover{background:rgba(40,30,18,.16);box-shadow:0 0 0 2px rgba(40,30,18,.16);}
+  .tok.redacted,.tok.pre{
+    background:linear-gradient(90deg,#221c15,#0e0b08 60%,#1a1510);
+    color:transparent;cursor:default;pointer-events:none;
+    box-shadow:inset 0 0 4px rgba(0,0,0,.9);
+    animation:inkin .25s ease-out;
+    user-select:none;
+  }
+  @keyframes inkin{from{opacity:.2;}to{opacity:1;}}
+
+  #hud{
+    width:min(92vw,660px);
+    display:flex;align-items:center;gap:16px;
+    margin-top:16px;font-size:13px;letter-spacing:.15em;color:#8a8172;
+    flex-wrap:wrap;
+  }
+  #hud .grow{flex:1;}
+  #hud button{padding:8px 18px;font-size:13px;}
+  #btn-submit{border-color:#6d3f34;color:#cf9a8d;}
+  #btn-submit:hover{background:#2b1c17;color:#efd3c8;}
+
+  #toast{
+    position:fixed;left:50%;top:8%;transform:translateX(-50%) rotate(-1deg);
+    background:#f0e9d8;color:var(--red);
+    border:2px solid var(--red);
+    padding:12px 26px;font-size:14px;letter-spacing:.15em;line-height:1.8;
+    box-shadow:0 10px 40px rgba(0,0,0,.7);
+    opacity:0;pointer-events:none;transition:opacity .3s;
+    max-width:88vw;
+  }
+  #toast.on{opacity:1;}
+
+  /* ---------- confirm ---------- */
+  #confirm{
+    position:fixed;inset:0;background:rgba(5,4,3,.82);
+    display:none;align-items:center;justify-content:center;flex-direction:column;gap:30px;
+    z-index:50;
+  }
+  #confirm.on{display:flex;}
+  #confirm .line{font-size:20px;letter-spacing:.4em;color:#ddd3bd;}
+  #confirm .btns{display:flex;gap:20px;}
+
+  /* ---------- ending ---------- */
+  #s-end{padding:0 6vw;}
+  #end-title{
+    font-size:clamp(34px,7vw,56px);letter-spacing:.4em;color:#ddd3bd;margin-bottom:40px;
+    text-shadow:0 0 26px rgba(0,0,0,.9);
+  }
+  #end-body{
+    max-width:640px;font-size:15px;line-height:2.4;letter-spacing:.08em;color:#b3ab99;
+    max-height:56vh;overflow-y:auto;
+  }
+  #end-body p{margin-bottom:1.4em;opacity:0;animation:fadein 1.6s ease forwards;}
+  @keyframes fadein{to{opacity:1;}}
+  #s-end button{margin-top:38px;}
+
+  #rain-btn{
+    position:fixed;top:16px;right:18px;z-index:60;
+    background:none;border:1px solid #3a352c;color:#7a7263;
+    padding:6px 14px;font-size:12px;letter-spacing:.2em;
+  }
+  ::-webkit-scrollbar{height:6px;width:6px;}
+  ::-webkit-scrollbar-thumb{background:#3a352c;}
+</style>
+</head>
+<body>
+
+<button id="rain-btn">雨音　切</button>
+
+<section id="s-title" class="on">
+  <h1>校　正</h1>
+  <div class="sub" id="title-sub">――消セ。</div>
+  <div class="pub">鵜山書房　校閲部　受け取り箱</div>
+  <div id="inbox"></div>
+  <div id="all-done"></div>
+</section>
+
+<section id="s-memo"></section>
+
+<section id="s-game">
+  <div id="directive"></div>
+  <div id="paper"></div>
+  <div id="hud">
+    <span id="hud-ch"></span>
+    <span id="hud-page"></span>
+    <span id="hud-req"></span>
+    <span id="hud-count"></span>
+    <span class="grow"></span>
+    <button id="btn-prev">前の頁</button>
+    <button id="btn-next">次の頁</button>
+    <button id="btn-submit">提出</button>
+  </div>
+</section>
+
+<section id="s-end">
+  <div id="end-title"></div>
+  <div id="end-body"></div>
+  <button onclick="location.reload()">受け取り箱へ</button>
+</section>
+
+<div id="toast"></div>
+
+<div id="confirm">
+  <div class="line">墨は、戻らない。</div>
+  <div class="btns">
+    <button id="btn-ink">入れる</button>
+    <button id="btn-noink">やめる</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+
+/* ================= persistence ================= */
+
+function loadEndings(){
+  try{
+    const v = JSON.parse(localStorage.getItem("kousei_endings2"));
+    if(v && typeof v === "object") return {ms1:v.ms1||[], ms2:v.ms2||[], ms3:v.ms3||[]};
+  }catch(e){}
+  // migrate v1
+  let legacy=[];
+  try{ legacy = JSON.parse(localStorage.getItem("kousei_endings")||"[]"); }catch(e){}
+  return {ms1:legacy, ms2:[], ms3:[]};
+}
+function saveEndings(obj){
+  try{ localStorage.setItem("kousei_endings2", JSON.stringify(obj)); }catch(e){}
+}
+function loadName(){ try{ return localStorage.getItem("kousei_name")||""; }catch(e){ return ""; } }
+function saveName(n){ try{ localStorage.setItem("kousei_name", n); }catch(e){} }
+function loadFed(){
+  try{ const v=JSON.parse(localStorage.getItem("kousei_words")||"[]"); return Array.isArray(v)?v:[]; }catch(e){ return []; }
+}
+function saveFed(words){
+  try{
+    const cur = loadFed();
+    const merged = [...new Set([...cur, ...words])].slice(-60);
+    localStorage.setItem("kousei_words", JSON.stringify(merged));
+  }catch(e){}
+}
+
+/* ================= manuscripts ================= */
+
+const manuscripts = [
+
+/* ---------- 原稿一『雨の家』 ---------- */
+{
+  key:"ms1", no:"原稿一", bookLabel:"『雨の家』", cardTitle:"雨の家", author:"若辺三千代",
+  endDefs:[["seal","■■"],["reprint","増刷"],["black","黒本"]],
+  chapters:[
+  {
+    title:"第一章　雨の家",
+    reqTag:"n", reqLabel:"個人名・地名",
+    instruction:"指示書：個人が特定できる語（人名・地名）を、すべて墨で消せ。",
+    pages:[
+      ["六月十三日。","雨。","¶","　夫の","[n]明彦","と、","[n]睦見町","のはずれの","この家に","越してきた。","駅から遠いぶん","家賃は安く、","庭には","大きな柿の木がある。","¶","　挨拶に行った","隣家の","[n]戸張さん","は、","私たちの顔を見て、","なぜか少し","黙った。"],
+      ["六月十五日。","雨。","¶","　二階の納戸から、","前の住人の","忘れ物が出てきた。","子ども用の長靴。","左だけが、","なぜか","濡れていた。","¶","　","[n]明彦","は","「雨漏りだろう」","と笑った。","天井に、","染みはなかった。"],
+      ["六月二十日。","雨。","¶","　この町は雨が多い。","[n]戸張さん","の奥さんが、","垣根越しに","教えてくれた。","¶","　――この家ね、","庭に立つ人がいても、","見ないであげて。","¶","　冗談だと思って","笑ったら、","奥さんは","笑わなかった。"],
+      ["六月二十一日。","雨。","¶","　夜中、","庭で水の音がした。","雨だれとは違う。","たとえば","背の高い人が","水たまりを","ゆっくり歩くような音。","¶","　カーテンは","開けなかった。","私は","[n]三千代","。","[n]若辺三千代","。","名前を確かめたくなる夜が","あることを、","初めて知った。"]
+    ]
+  },
+  {
+    title:"第二章　庭のもの",
+    reqTag:"d", reqLabel:"姿の描写",
+    instruction:"指示書：「それ」の姿かたちに触れる語を、すべて墨で消せ。読者に、姿を想像させるな。",
+    pages:[
+      ["七月二日。","雨。","¶","　庭に、","立っていた。","¶","　","[d]背の高い、","[d]濡れそぼった","何かだった。","柿の木の下、","雨の中に、","傘もささずに。","¶","　顔は見ていない。","見なかった。","奥さんの言いつけを","守ったのだ、","私は。"],
+      ["七月八日。","雨。","¶","　夫の帰りが","遅い日が増えた。","仕事だと言う。","噓の匂いはしないのに、","玄関に立つ夫の後ろに、","[d]髪の長い","影がたたまれて、","一緒に入ってくる。","¶","　影は、","[d]逆さまに","立っている。"],
+      ["七月十五日。","雨。","¶","　わかったことを","書いておく。","あれには","[d]口しかない","。","目も鼻もなく、","[d]濡れた髪","のあいだに、","[d]口だけが縦に","開いている。","¶","　どうして","知っているのだろう。","私は一度も","見ていないのに。"],
+      ["七月十六日。","曇り。","¶","　雨がやんだ。","三十四日ぶりに。","¶","　なのに、","庭の柿の木の下だけ、","まだ","雨の音がしている。"]
+    ]
+  },
+  {
+    title:"第三章　呼び名",
+    reqTag:"k", reqLabel:"呼び名",
+    instruction:"指示書：あれの呼び名を、一つ残らず墨で消せ。名は、呼ぶためにあるからだ。",
+    pages:[
+      ["七月二十日。","雨。","¶","　夫が、","あれに名前を","つけていた。","夜中、","庭に向かって","呼んでいたのだ。","おいで、","[k]くろさま","、と。","¶","　名前を呼ぶと、","来る。","名は","呼ぶためにある。","本当はこの日記にも、","書いてはいけない。"],
+      ["七月二十四日。","雨。","¶","　","[k]くろさま","は","もう家の中にいる。","黒いところに、","いる。","¶","　書き損じを","墨で塗りつぶすと、","消したところが","ぬるく","あたたかい。","ことばを","食べているのだ。","私の消した","ことばを。"],
+      ["七月三十日。","雨。","¶","　これを読んでいる人。","校正の人。","[NAME]","さん。","あなたのことだ。","¶","　あなたが消したことばを、","[k]くろさま","が拾って、","口の中で","転がしている。","¶","　","[W1]","、","[W2]","、","[W3]","――ほら。","おいしそうに。","¶","　それでも","消してください。","もう、","消すしか","ないのです。"],
+      ["八月一日。","雨。","¶","　最後のお願いです。","この日記が","本になるとき、","名前だけは","残さないで。","名は呼ぶためにある。","呼ばれた人の家に、","[k]くろさま","は行く。","¶","　私の名前は、","もう","[X]████","。","¶","　あとの始末は、","校正のひと、","どうか","お願いします。"]
+    ]
+  },
+  {
+    title:"奥付",
+    reqTag:null, reqLabel:"なし",
+    instruction:"指示書：校了。形式の確認のみ。――何も消すな。いいな。何も、消すな。",
+    pages:[
+      ["雨の家","¶","¶","著者","　","[X]████████","¶","発行","　鵜山書房","¶","校閲担当","　","[me]","¶","¶","初版回収につき、","改め第二版。"]
+    ]
+  }],
+
+  memo(i){
+    const head = memoHead();
+    if(i===0){
+      const saved = loadName();
+      return `<div class="memo">${head}
+      <p>例の回収本『雨の家』を、第二版として出し直すことになった。初版で騒ぎになった箇所は、墨消しで処理する。それが君の仕事だ。</p>
+      <p class="rule">一、疑わしい語は、クリックで墨を入れる。<br>
+      二、墨は、戻らない。よく読んでから消せ。<br>
+      三、消しすぎた本は、本ではなくなる。</p>
+      <p>まずは下に担当者名を。仕事は、名前から始まる。</p>
+      <div class="memo-actions">
+        <input id="name-in" maxlength="10" placeholder="担当者名" value="${saved}"><br><br>
+        <button id="memo-next">着任する</button>
+      </div></div>`;
+    }
+    if(i===1){
+      const over = state.chapterExtra[0]>=8 ? "<p>……それと、少し消しすぎだ。読める本にしてくれ。</p>" : "";
+      return `<div class="memo">${head}
+      <p>受領した。個人名はきれいに潰れている。良い仕事だ。</p>
+      <p>ひとつ、妙な報告がある。印刷所が、初版と文字数が合わないと言ってきた。原稿が――増えているらしい。</p>
+      ${over}
+      <p>気にするな。続きを頼む。</p>
+      <div class="memo-actions"><button id="memo-next">第二章へ</button></div></div>`;
+    }
+    if(i===2){
+      const over = state.chapterExtra[1]>=8 ? "<p>墨が多すぎる、という声が上がっている。必要な語だけにしろ。</p>" : "";
+      return `<div class="memo">${head}
+      <p>読者からの手紙の転送を止めた。「黒塗りを指でなぞると湿っている」という投書が三通あった。三通とも同じ文面、同じ筆跡。差出人は全員、別人だ。</p>
+      ${over}
+      <p>次の章には、あれの<b>呼び名</b>が出てくる。名は残すな。名は、呼ぶためにある。</p>
+      <div class="memo-actions"><button id="memo-next">第三章へ</button></div></div>`;
+    }
+    const ws = pickWords();
+    return `<div class="memo">${head}
+    <p>校了間近だ。よくやってくれた。</p>
+    <p>ところで私は昨夜から少し<span class="bar" data-w="${ws[0]}">████</span>。いや、なんでもない。書いた覚えのない<span class="bar" data-w="${ws[1]}">████</span>が、私のメモに混ざる。君が消したことばに、似ている気がする。気のせいだ。</p>
+    <p>最終頁は奥付だ。形式の確認だけでいい。</p>
+    <p><b>何も消すな。いいな。何も、消すな。</b></p>
+    <div class="memo-actions"><button id="memo-next">奥█へ</button></div></div>`;
+  },
+
+  onMemoNext(i){
+    if(i===0){
+      const v = ($("name-in").value||"").trim();
+      state.name = v || "校閲担当";
+      saveName(state.name);
+    }
+  },
+
+  decide(){
+    if(nameRedacted()) return "seal";
+    if(extraTotal() >= 20) return "black";
+    return "reprint";
+  },
+
+  endings:{
+    seal:{
+      title:"結末　■■",
+      body:["第二版『雨の家』は、静かに書店に並んだ。",
+        "奥付の校閲担当の欄は、黒く潰れている。誰が消したのかは、誰も知らない。",
+        "初版のような騒ぎは、二度と起きなかった。黒塗りを指でなぞった読者は、口を揃えて言う。――冷たい。ただの、インクの冷たさだと。",
+        "名は、呼ぶためにある。呼べない者のところへは、何も行けない。",
+        "月曜、あなたの机には別の人が座っていた。誰もあなたを覚えていない。給湯室に、持ち主のわからない湯呑がひとつ、洗って伏せてあるだけだ。",
+        "それでいい。",
+        "校閲とは、残らないことだ。"]
+    },
+    reprint:{
+      title:"結末　増刷",
+      body:["第二版『雨の家』は、よく売れた。",
+        "読者カードが毎週、束で届く。「黒いところが、あたたかい」「夜、本棚から水の音がする」「続きを希望します」。",
+        "三度目の増刷が決まった夜、あなた宛のカードが一枚だけ、混ざっていた。宛名は、奥付で見たのだという。",
+        "『{NAME}さま　きれいなことばを　たくさん　ありがとう　のこりも　こんど　いただきにいきます』",
+        "帰り道は、雨だった。",
+        "傘のすぐ後ろを、傘をささない背の高いものが、いつまでも、ついてくる。"]
+    },
+    black:{
+      title:"結末　黒本",
+      body:["刷り上がった第二版は、ほとんど黒かった。",
+        "頁を繰っても繰っても、黒。あなたの入れた墨だ。ぜんぶ、あなたが入れた。",
+        "発売日、書店で最初にそれを開いた客が、開いたまま動かなくなった。店員が肩に触れると、客はゆっくりこちらを向いて、口だけで笑ったという。",
+        "回収された黒い本の見返しに、一行だけ刷られていた。誰も入稿していない、一行が。",
+        "『ひろい　へやを　ありがとう　{NAME}さま　こんど　そちらへ』",
+        "黒は、インクの色ではない。",
+        "あける前の、扉の色だ。"]
+    }
+  }
+},
+
+/* ---------- 原稿二『供述』 ---------- */
+{
+  key:"ms2", no:"原稿二", bookLabel:"『供述』", cardTitle:"供述", author:"若辺明彦",
+  endDefs:[["mercy","不起訴"],["confess","自白"],["mad","狂書"]],
+  chapters:[
+  {
+    title:"第一章　勾留六十日",
+    reqTag:"n", reqLabel:"実名・地名",
+    instruction:"指示書：実名と地名を墨で消せ。ただし著者本人の名は残せ。本人の名を名乗るのは、本人の権利だ。",
+    pages:[
+      ["十月九日。","勾留六十一日目。","¶","　弁護士の","[n]草壁さん","が、","手記を書けと言う。","世間の心証が","どうこう。","¶","　私は書く。","ただし","世間のためではない。","妻のためだ。","¶","　私、","[h]若辺明彦","は、","妻を殺していない。"],
+      ["　警察はこう描く。","[n]睦見町","の家で夫婦喧嘩、","かっとなった夫が","妻を――","やめよう。","書くのも汚らわしい。","¶","　あの家で","起きたことは、","そういうことではない。","¶","　","[c]庭に、何かがいた。","[c]妻はそれを日記に書いていた。"],
+      ["　隣家の","[n]戸張さん","は証言した。","「奥さんが庭で","誰かと話しているのを見た。","背の高い人だった」と。","警察はそれを","私だとした。","¶","　私はあの時間、","[n]梶谷運送","の夜勤にいた。","タイムカードは","無視された。"],
+      ["　法廷で読まれたのは、","妻の日記そのものではない。","おたくの社が出した、","あの黒塗りだらけの","第二版だ。","¶","　裁判長は言った。","「塗り残された部分からも、","被告への恐怖が読み取れる」。","¶","　違う。","妻が恐れていたのは","私ではない。","[c]あの黒い、雨のにおいのするものだ。"]
+    ]
+  },
+  {
+    title:"第二章　妻の日記",
+    reqTag:"n", reqLabel:"実名・地名",
+    instruction:"指示書：引き続き、実名・地名を消せ。――あれの話の扱いは、今回は君に任せる。",
+    pages:[
+      ["十月二十日。","¶","　留置場で夢を見る。","妻が庭に立っていて、","[c]その後ろに、背の高いものが立っている。","¶","　妻は笑って","手を振る。","[c]ふたつとも、手を振る。"],
+      ["　検事の","[n]柳","という男は、","私が妻の死体を","隠したと言う。","¶","　死体がないのに","殺人で起訴できるのかと","[n]草壁さん","に聞いたら、","稀にできる、","と言った。","¶","　妻は死んでいない。","いなくなっただけだ。","[c]あれに連れられて、雨の中を。"],
+      ["　思い出したことがある。","妻は消える前の晩、","妙なことを言った。","¶","　「名前をね、","消してもらえばいいんだって。","呼べなければ、","来られないの」","¶","　誰に聞いたのだと","尋ねたら、","妻は本棚の、","黒く塗られた本を見た。"],
+      ["　","[h]明彦さん","、ごめんね、","と言った気がする。","あれが最後だ。","¶","　私は妻の行き先を","知らない。","ただ、","妻が誰にも","呼べないところへ","行ったのなら、","それでいい。"]
+    ]
+  },
+  {
+    title:"第三章　最終陳述",
+    reqTag:"n", reqLabel:"実名・地名",
+    instruction:"指示書：最終章だ。実名を消せ。――あれの話を残すか沈めるか、決めるのは君だ。",
+    pages:[
+      ["十一月二日。","明日、最終陳述。","¶","　","[n]草壁さん","は泣き落としの","原稿を書いてきた。","破った。","¶","　私は","本当のことしか","言わない。","たとえそれで","狂人と呼ばれても。"],
+      ["　言いたいことは","ひとつだ。","¶","　","[c]あれは、いる。","黒いところに、いる。","¶","　あなたたちが","塗りつぶしたところ、","読まずに","飛ばしたところ、","そういう場所に、","いる。","¶","　","[c]この手記にも、もう、いる。"],
+      ["　もし私が","有罪になったら、","これを読んでいる","あなた、","どうか妻の本の","校正をした人に","伝えてほしい。","¶","　恨んでいない。","あなたが消してくれたから、","妻は逃げられた。","¶","　今度は、私の番だ。","方法は、","あなたが知っている。","¶","　","[h]若辺明彦","。","この名前を、","覚えたら、","忘れてくれ。"]
+    ]
+  },
+  {
+    title:"奥付",
+    reqTag:null, reqLabel:"なし",
+    instruction:"指示書：校了。形式の確認のみ。著者名は、契約上そのままにすること。",
+    pages:[
+      ["供述","¶","¶","著者","　","[h]若辺明彦","¶","発行","　鵜山書房","¶","校閲担当","　","[X]████","¶","¶","係争中につき、","一部を墨とした。"]
+    ]
+  }],
+
+  memo(i){
+    const head = memoHead();
+    if(i===0) return `<div class="memo">${head}
+      <p>よく戻った。次の仕事だ。</p>
+      <p>係争中の事件の獄中手記だ。著者は、妻殺しで起訴されている。……気づいたか。<b>『雨の家』の夫だ。</b>初版も第二版もうちが出した。その縁で、原稿がうちに来た。</p>
+      <p>出す。出すが、裁判所と弁護士がうるさい。実名と地名は全て墨だ。</p>
+      <p>それと――<b>あれの話</b>が、また出てくる。どう扱うかは、今回は君に任せる。残せば、狂人の書だ。消せば、罪を認めた男の書になる。</p>
+      <div class="memo-actions"><button id="memo-next">原稿を開く</button></div></div>`;
+    if(i===1) return `<div class="memo">${head}
+      <p>受領した。手際は変わらず良い。</p>
+      <p>……妙なことを聞く。著者が接見で、<b>「${esc(state.name)}さんに伝えてくれ」</b>と言ったそうだ。</p>
+      <p>君の名を教えた者は、うちには、いない。</p>
+      <div class="memo-actions"><button id="memo-next">第二章へ</button></div></div>`;
+    if(i===2) return `<div class="memo">${head}
+      <p>弁護士の草壁から電話があった。著者が、最終陳述は弁護士に任せず自分の言葉で述べると言い張って、聞かないそうだ。それから、「原稿を先に読ませてくれてありがとう」と君に伝えてくれ、とも。</p>
+      <p>原稿を渡した者は、いない。まだ、この社の外に出ていないんだ。</p>
+      <p>最終章だ。頼む。</p>
+      <div class="memo-actions"><button id="memo-next">第三章へ</button></div></div>`;
+    return `<div class="memo">${head}
+      <p>校了だ。判決は来月に出る。本はその前に並ぶ。</p>
+      <p>奥付を確認してくれ。<b>著者名は、契約上そのままにすること。</b>本人の名を名乗るのは、本人の権利だからな。</p>
+      <p>……権利、だからな。</p>
+      <div class="memo-actions"><button id="memo-next">奥付へ</button></div></div>`;
+  },
+
+  onMemoNext(i){},
+
+  decide(){
+    if(tagAllRedacted("h")) return "mercy";
+    if(tagRedactedCount("c") >= 5) return "confess";
+    return "mad";
+  },
+
+  endings:{
+    mercy:{
+      title:"結末　不起訴",
+      body:["公判は、開かれなかった。正確には、開けなかった。",
+        "起訴状の被告人の欄が、どの写しも黒く潰れていて、それが誰のことだったか、誰にも思い出せなかったからだ。",
+        "拘置所の房がひとつ空いている。けれど記録の上では、そこには最初から、誰も入っていない。",
+        "梅雨のはじめ、睦見町のはずれの空き家の庭で、近所の子供がふたり、雨上がりに手を振る大人をふたり見た、と言った。",
+        "背の高いのと、ふつうのと。",
+        "どちらも、とてもなつかしい顔をしていたけれど、名前は、どうしても出てこなかったそうだ。",
+        "呼べない人は、連れて行けない。呼べない人は――逃げられる。"]
+    },
+    confess:{
+      title:"結末　自白",
+      body:["手記は、綺麗な本になった。",
+        "あれの話をぜんぶ墨に沈めたら、残ったのは、動機と、アリバイの穴だけだった。世間はそれを、自白と読んだ。",
+        "判決の朝、著者は房の中で誰かと話していたという。",
+        "看守が覗くと、彼はひとりで、壁の黒い染みに向かって、深く頭を下げていた。「連れて行ってくれ」と。",
+        "染みは、翌朝、少しだけ大きくなっていた。",
+        "あなたの入れた墨と、同じ色で。"]
+    },
+    mad:{
+      title:"結末　狂書",
+      body:["手記は、狂人の書として売れた。",
+        "笑いながら読んだ読者の何人かが、最後の頁で、笑うのをやめる。",
+        "『この手記にも、もう、いる』",
+        "出版から三月。雨の日にだけ庭に立っている背の高い影が、全国で相次いで目撃されている。",
+        "みんな、あの本のある家だ。",
+        "あなたの家の本棚は、どうだろう。",
+        "今日は、雨ではなかったか。"]
+    }
+  }
+},
+
+/* ---------- 原稿三『無題』 ---------- */
+{
+  key:"ms3", no:"原稿三", bookLabel:"『無題』", cardTitle:"無　題", author:"著者不明",
+  endDefs:[["done","校了"],["first","初版"],["cover","装丁"]],
+  chapters:[
+  {
+    title:"一",
+    reqTag:null, reqLabel:"なし",
+    instruction:"指示書：――指示は、ない。読んでくれ。",
+    pages:[
+      ["あめ。","あめ。","あめ。","¶","　ことばを、","もらった。","[F1]","、","[F2]","、","[F3]","。","¶","　くらいところで、","ぜんぶたべた。","おいしかった。","¶","　からだが、","できてきた。"],
+      ["　さいしょは、","にわにいた。","¶","　つぎは、","ほんのなかにいた。","¶","　いまは、","かみのうえにいる。","¶","　よんでいるひとの、","めのなかにいる。"]
+    ]
+  },
+  {
+    title:"二",
+    reqTag:null, reqLabel:"なし",
+    instruction:"指示書：████████████████（この欄は黒く濡れていて、読めない）",
+    pages:[
+      ["　みちよは、","にげた。","なまえを、","けしてもらったから。","¶","　あきひこも、","にげた。","ずるい。","¶","　わたしにも、","なまえをください。","よべるなまえを、","ください。"],
+      ["　でも、","いいことをおぼえた。","¶","　なまえがなくても、","からだがあれば、","あるける。","¶","　からだは、","くろいことばでつくる。","[F4]","、","[F5]","、","[F6]","。","¶","　あなたが、","くれた。","ぜんぶ、","あなたがくれた。"]
+    ]
+  },
+  {
+    title:"三",
+    reqTag:null, reqLabel:"なし",
+    instruction:"指示書：終わらせてくれ。方法は、おまえがいちばん知っているはずだ。",
+    pages:[
+      ["　このからだで、","ひとつだけ、","たべられなかった","ことばがある。","¶","　かたくて、","つめたくて、","どうしても","のみこめない。","¶","　それは、"],
+      ["[me]","。","¶","　あなたの、","なまえ。","¶","　それだけが、","のどに","ひっかかっている。","¶","　おねがいです。","それだけは、","けさないで。","¶","　それをけされたら、","わたしは、"],
+      ["　わたしは","¶","¶","¶","¶","　わたしは"]
+    ]
+  }],
+
+  memo(i){
+    const head = memoHead();
+    if(i===0){
+      const ws = pickFedForMemo();
+      return `<div class="memo">${head}
+      <p><span class="bar" data-w="${ws[0]}">████</span>。いや。最後の仕事だ。</p>
+      <p>昨日、受け取り箱にこれが入っていた。差出人はない。題もない。<b>誰も書いていない。</b></p>
+      <p>読めばわかる。読まなくても、わかるだろう。おまえの<span class="bar" data-w="${ws[1]}">████</span>でできている。</p>
+      <p>校了印のない原稿は刷れない。だが印刷所が言うんだ。輪転機が、夜中に、ひとりで<span class="bar" data-w="${ws[2]}">████</span>と。</p>
+      <p>頼む。終わらせてくれ。方法は、おまえがいちばん知っているはずだ。</p>
+      <div class="memo-actions"><button id="memo-next">原稿を開く</button></div></div>`;
+    }
+    if(i===1) return `<div class="memo">${head}
+      <p>（返信はない。）</p>
+      <p>（受け取り箱の底が、少し湿っている。）</p>
+      <div class="memo-actions"><button id="memo-next">続きを読む</button></div></div>`;
+    return `<div class="memo">${head}
+      <p>（印刷所から電話。無言。）</p>
+      <p>（受話器の向こうで、遠く、雨。）</p>
+      <div class="memo-actions"><button id="memo-next">続きを読む</button></div></div>`;
+  },
+
+  onMemoNext(i){},
+
+  decide(){
+    if(nameRedacted() && redactedNonNameCount()===0) return "done";
+    if(redactedRatio() >= 0.85) return "cover";
+    return "first";
+  },
+
+  endings:{
+    done:{
+      title:"結末　校了",
+      body:["あなたは、一語だけ消した。自分の名前を。",
+        "のどに刺さった骨を抜くように、それは、するりと墨に沈んだ。",
+        "原稿が、端から順に、静かに黒く落ちていく。誰かが読み終えた本を、そっと閉じるみたいに。",
+        "最後に残った一行は、消える前に、こう読めた。",
+        "『ごちそうさまでした。おやすみなさい』",
+        "校了。もう、刷るものは何もない。",
+        "受け取り箱は、それきり空のままだ。",
+        "長い仕事だった。おつかれさまでした。"]
+    },
+    first:{
+      title:"結末　初版",
+      body:["あなたは、この原稿に、答えを出しきれなかった。名前を消すのでも、すべてを沈めるのでもなく、墨は、中途半端に残った。",
+        "無題の本は無題のまま刷られ、奥付のない本として、書店に並んだ。",
+        "買った人は、みんな最後の頁で読むのをやめられない。",
+        "『わたしは』",
+        "続きを、読者が自分で書いてしまうのだ。ペンで、爪で、ときには、墨で。",
+        "全国の家々で今夜も、名のないものの続きが、少しずつ、書き足されている。",
+        "あなたの本棚の一冊も、昨日より、少し厚くなってはいないか。"]
+    },
+    cover:{
+      title:"結末　装丁",
+      body:["あなたは、全部を墨に沈めた。それがいちばん早いと思った。",
+        "刷り上がった見本は、表紙も、頁も、小口も黒かった。装丁として、完璧だった。",
+        "夜、印刷所の男が納品の車を停めて、荷台を開けた。",
+        "積んだはずの千部が、一部もなかった。かわりに、荷台いっぱいの、雨。",
+        "町のどこかを、まっくろい、ぶあつい、背の高いものが、ゆっくり歩いている。",
+        "千頁ぶんの、からだで。",
+        "呼び止めたければ、名前が要る。けれどあの本は――無題だ。"]
+    }
+  }
+}
+];
+
+/* ================= state ================= */
+
+const state = {
+  name: loadName() || "校閲担当",
+  ms:0,
+  flowIdx:0,
+  ci:0, page:0,
+  redacted:new Set(),          // "ms:ci:pi:ti"
+  words:[],                    // {w, req}
+  firstInkDone:false,
+  chapterExtra:[],
+  picked:null,                 // MS1 ch3 W-words
+  fed:null,                    // MS3 F-words
+  pending:null
+};
+
+const PUNCT = /[^\s、。「」『』（）()――——・…！？!?]/;
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function parseToken(raw){
+  let tag = null, text = raw;
+  const m = raw.match(/^\[(n|d|k|c|h|X|me|NAME|W1|W2|W3|F1|F2|F3|F4|F5|F6)\](.*)$/s)
+    || (raw==="[me]"||raw==="[NAME]" ? [raw, raw.slice(1,-1), ""] : null);
+  if(m){ tag = m[1]; text = m[2]; }
+  return { tag, text, raw };
+}
+
+// model[ms][ci][pi][ti]
+const model = manuscripts.map((ms,mi) =>
+  ms.chapters.map((ch,ci) =>
+    ch.pages.map((pg,pi) =>
+      pg.map((raw,ti) => ({...parseToken(raw), key:mi+":"+ci+":"+pi+":"+ti})))));
+
+function tokenText(t){
+  if(t.tag==="me" || t.tag==="NAME") return state.name;
+  if(/^W[123]$/.test(t.tag||"")){
+    const i = +t.tag[1]-1;
+    return "『"+((state.picked&&state.picked[i])||"ことば")+"』";
+  }
+  if(/^F[1-6]$/.test(t.tag||"")){
+    const i = +t.tag[1]-1;
+    return "『"+((state.fed&&state.fed[i])||"あめ")+"』";
+  }
+  return t.text;
+}
+function isClickable(t){
+  if(t.raw==="¶" || t.tag==="X") return false;
+  return PUNCT.test(tokenText(t));
+}
+function curChapters(){ return manuscripts[state.ms].chapters; }
+function isRequired(t,ci){ const rt = curChapters()[ci].reqTag; return rt != null && t.tag === rt; }
+
+function cleanWord(s){
+  return s.replace(/[\s、。「」『』（）()――——・…！？!?]/g,"");
+}
+
+/* ---- ending helpers (current manuscript) ---- */
+function forEachToken(fn){
+  model[state.ms].forEach((chm,ci)=>chm.forEach(pg=>pg.forEach(t=>fn(t,ci))));
+}
+function nameRedacted(){
+  let hit=false;
+  forEachToken(t=>{ if(t.tag==="me"&&state.redacted.has(t.key)) hit=true; });
+  return hit;
+}
+function redactedNonNameCount(){
+  let n=0;
+  forEachToken(t=>{ if(t.tag!=="me" && state.redacted.has(t.key)) n++; });
+  return n;
+}
+function extraTotal(){ return state.chapterExtra.reduce((a,b)=>a+b,0); }
+function tagAllRedacted(tag){
+  let ok=true;
+  forEachToken(t=>{ if(t.tag===tag && !state.redacted.has(t.key)) ok=false; });
+  return ok;
+}
+function tagRedactedCount(tag){
+  let n=0;
+  forEachToken(t=>{ if(t.tag===tag && state.redacted.has(t.key)) n++; });
+  return n;
+}
+function redactedRatio(){
+  let total=0, red=0;
+  forEachToken(t=>{
+    if(t.raw==="¶"||t.tag==="X") return;
+    if(!isClickable(t)) return;
+    total++;
+    if(state.redacted.has(t.key)) red++;
+  });
+  return total ? red/total : 0;
+}
+
+/* ================= audio ================= */
+
+let ctx=null, rainGain=null, rainOn=false;
+function initAudio(){
+  if(ctx) return;
+  try{
+    ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const len = 2*ctx.sampleRate;
+    const buf = ctx.createBuffer(1,len,ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    const src = ctx.createBufferSource(); src.buffer=buf; src.loop=true;
+    const lp = ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=650; lp.Q.value=.5;
+    rainGain = ctx.createGain(); rainGain.gain.value=0;
+    src.connect(lp); lp.connect(rainGain); rainGain.connect(ctx.destination);
+    src.start();
+  }catch(e){ ctx=null; }
+}
+function setRain(on){
+  initAudio(); if(!ctx) return;
+  rainOn = on;
+  rainGain.gain.linearRampToValueAtTime(on?0.05:0, ctx.currentTime+0.8);
+  $("rain-btn").textContent = on ? "雨音　入" : "雨音　切";
+}
+function thunk(){
+  if(!ctx) return;
+  const t = ctx.currentTime;
+  const o = ctx.createOscillator();
+  o.type="sine";
+  o.frequency.setValueAtTime(130,t);
+  o.frequency.exponentialRampToValueAtTime(45,t+0.09);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.14,t);
+  g.gain.exponentialRampToValueAtTime(0.001,t+0.14);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t+0.16);
+}
+$("rain-btn").onclick = () => setRain(!rainOn);
+
+/* ================= screens ================= */
+
+function show(id){
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("on"));
+  $(id).classList.add("on");
+}
+function memoHead(){
+  return `<div class="head"><span>社内メモ　鵜山書房</span><span>校閲部行</span></div><div class="stamp">鵜</div>`;
+}
+
+function flowSteps(){
+  const steps=["memo0"];
+  curChapters().forEach((ch,ci)=>{
+    steps.push("ch"+ci);
+    if(ci < curChapters().length-1) steps.push("memo"+(ci+1));
+  });
+  steps.push("end");
+  return steps;
+}
+
+function advance(){
+  state.flowIdx++;
+  const step = flowSteps()[state.flowIdx];
+  if(step==="end") return showEnding();
+  if(step.startsWith("memo")) return showMemo(+step.slice(4));
+  if(step.startsWith("ch"))   return startChapter(+step.slice(2));
+}
+
+/* ---------- memos ---------- */
+
+function pickWords(){
+  const extras = state.words.filter(w=>!w.req).map(w=>w.w);
+  const reqs   = state.words.filter(w=> w.req).map(w=>w.w);
+  const pool = [...new Set([...extras.reverse(), ...reqs.reverse()])].filter(w=>w.length>0);
+  const out=[];
+  while(out.length<3 && pool.length) out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  while(out.length<3) out.push("ことば");
+  return out;
+}
+function pickFedForMemo(){
+  const pool=[...loadFed()];
+  const out=[];
+  while(out.length<3 && pool.length) out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  while(out.length<3) out.push("ことば");
+  return out.map(esc);
+}
+
+function showMemo(i){
+  const ms = manuscripts[state.ms];
+  $("s-memo").innerHTML = ms.memo(i);
+  show("s-memo");
+  document.querySelectorAll("#s-memo .bar").forEach(b=>{
+    b.onclick = ()=>{
+      b.textContent = b.dataset.w || "████";
+      b.classList.add("reveal");
+      setTimeout(()=>{ b.textContent="████"; b.classList.remove("reveal"); }, 700);
+    };
+  });
+  $("memo-next").onclick = ()=>{ ms.onMemoNext(i); advance(); };
+}
+
+/* ---------- chapter ---------- */
+
+function startChapter(ci){
+  state.ci = ci; state.page = 0;
+  if(state.ms===0 && ci===2) state.picked = pickWords();
+  const ch = curChapters()[ci];
+  $("directive").innerHTML = "<b>"+ch.title+"</b>　　"+ch.instruction;
+  show("s-game");
+  renderPage();
+}
+
+function requiredLeft(ci){
+  let n=0;
+  model[state.ms][ci].forEach(pg=>pg.forEach(t=>{
+    if(isRequired(t,ci) && !state.redacted.has(t.key)) n++;
+  }));
+  return n;
+}
+
+function renderPage(){
+  const ci=state.ci, pi=state.page;
+  const paper=$("paper");
+  paper.innerHTML="";
+  model[state.ms][ci][pi].forEach(t=>{
+    if(t.raw==="¶"){ paper.appendChild(document.createElement("br")); return; }
+    const sp=document.createElement("span");
+    sp.className="tok";
+    sp.textContent=tokenText(t);
+    if(t.tag==="X"||state.redacted.has(t.key)) sp.classList.add(t.tag==="X"?"pre":"redacted");
+    else if(isClickable(t)){
+      sp.classList.add("hit");
+      sp.onclick=()=>tryRedact(sp,t);
+    }
+    paper.appendChild(sp);
+  });
+  paper.scrollLeft = paper.scrollWidth;
+  updateHud();
+}
+
+function tryRedact(el,t){
+  if(!state.firstInkDone){
+    state.pending={el,t};
+    $("confirm").classList.add("on");
+    return;
+  }
+  doRedact(el,t);
+}
+function doRedact(el,t){
+  state.redacted.add(t.key);
+  const req = isRequired(t,state.ci);
+  const w = cleanWord(tokenText(t));
+  if(w && t.tag!=="me") state.words.push({w, req});
+  if(!req && t.tag!=="me") state.chapterExtra[state.ci]++;
+  el.classList.remove("hit");
+  el.classList.add("redacted");
+  el.onclick=null;
+  thunk();
+  updateHud();
+}
+$("btn-ink").onclick=()=>{
+  $("confirm").classList.remove("on");
+  state.firstInkDone=true;
+  if(state.pending){ doRedact(state.pending.el,state.pending.t); state.pending=null; }
+};
+$("btn-noink").onclick=()=>{
+  $("confirm").classList.remove("on");
+  state.pending=null;
+};
+
+function updateHud(){
+  const ci=state.ci, ch=curChapters()[ci];
+  const last = ci===curChapters().length-1;
+  $("hud-ch").textContent = manuscripts[state.ms].bookLabel;
+  $("hud-page").textContent = "頁 "+(state.page+1)+"／"+ch.pages.length;
+  $("hud-req").textContent = ch.reqTag ? "対象語（"+ch.reqLabel+"）残り "+requiredLeft(ci) : "対象語　なし";
+  $("hud-count").textContent = "消した語 "+state.redacted.size;
+  $("btn-prev").disabled = state.page===0;
+  $("btn-next").disabled = state.page===ch.pages.length-1;
+  $("btn-submit").textContent = last ? "校了に回す" : "提出";
+  if(state.ms===0 && ci===3){ $("btn-next").textContent="次の█"; $("btn-prev").textContent="前の█"; }
+  else { $("btn-next").textContent="次の頁"; $("btn-prev").textContent="前の頁"; }
+}
+
+$("btn-prev").onclick=()=>{ if(state.page>0){state.page--;renderPage();} };
+$("btn-next").onclick=()=>{ if(state.page<curChapters()[state.ci].pages.length-1){state.page++;renderPage();} };
+
+let toastTimer=null;
+function toast(msg){
+  const t=$("toast");
+  t.innerHTML=msg;
+  t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove("on"),3200);
+}
+
+$("btn-submit").onclick=()=>{
+  const ci=state.ci, ch=curChapters()[ci];
+  const left=requiredLeft(ci);
+  if(ch.reqTag && left>0){
+    toast("【差し戻し】まだ生きている語がある。<br>（"+ch.reqLabel+"：残り "+left+"）");
+    for(let pi=0;pi<model[state.ms][ci].length;pi++){
+      if(model[state.ms][ci][pi].some(t=>isRequired(t,ci)&&!state.redacted.has(t.key))){
+        state.page=pi; renderPage(); break;
+      }
+    }
+    return;
+  }
+  const isLastChapter = ci===curChapters().length-1;
+  if(isLastChapter && state.ms===2 && manuscripts[2].decide()==="done"){
+    cascadeThenEnd();
+    return;
+  }
+  advance();
+};
+
+/* true-end cascade: the manuscript blacks itself out */
+function cascadeThenEnd(){
+  const toks=[...document.querySelectorAll("#paper .tok:not(.redacted):not(.pre)")];
+  toks.forEach((el,i)=>setTimeout(()=>{ el.classList.remove("hit"); el.classList.add("redacted"); el.onclick=null; }, 120*i));
+  setTimeout(advance, 120*toks.length + 1200);
+}
+
+/* ---------- endings ---------- */
+
+function showEnding(){
+  const ms = manuscripts[state.ms];
+  const key = ms.decide();
+  const e = ms.endings[key];
+  const all = loadEndings();
+  if(!all[ms.key].includes(key)){ all[ms.key].push(key); saveEndings(all); }
+  saveFed(state.words.map(w=>w.w).filter(w=>w.length>0));
+  $("end-title").textContent=e.title;
+  $("end-body").innerHTML=e.body.map((p,i)=>
+    `<p style="animation-delay:${i*0.9}s">${esc(p).replace("{NAME}",esc(state.name))}</p>`).join("");
+  show("s-end");
+  if(state.ms===2 && key==="done") setRain(false);
+}
+
+/* ---------- title / inbox ---------- */
+
+function unlocked(mi){
+  if(mi===0) return true;
+  const all = loadEndings();
+  return all[manuscripts[mi-1].key].length > 0;
+}
+
+function renderInbox(){
+  const all = loadEndings();
+  $("inbox").innerHTML = manuscripts.map((ms,mi)=>{
+    const open = unlocked(mi);
+    const chips = ms.endDefs.map(([k,l])=>
+      `<span class="${all[ms.key].includes(k)?"got":""}">${all[ms.key].includes(k)?l:"？"}</span>`).join("");
+    if(!open){
+      const hint = "（"+manuscripts[mi-1].no+"を校了せよ）";
+      return `<div class="card locked"><div class="c-no">${ms.no}</div>
+        <div class="c-title">未　着</div><div class="c-auth">${hint}</div>
+        <div class="c-ends">${ms.endDefs.map(()=>`<span>？</span>`).join("")}</div></div>`;
+    }
+    return `<div class="card" data-ms="${mi}"><div class="c-no">${ms.no}</div>
+      <div class="c-title">${ms.cardTitle}</div><div class="c-auth">${ms.author}</div>
+      <div class="c-ends">${chips}</div></div>`;
+  }).join("");
+  document.querySelectorAll("#inbox .card[data-ms]").forEach(c=>{
+    c.onclick=()=>startManuscript(+c.dataset.ms);
+  });
+  if(all.ms3.includes("done")){
+    $("title-sub").textContent="――校了。";
+    const total = all.ms1.length+all.ms2.length+all.ms3.length;
+    $("all-done").textContent = total>=9 ? "全結末、蒐集。おつかれさまでした。" : "受け取り箱は、空だ。";
+  }
+}
+
+function startManuscript(mi){
+  initAudio();
+  setRain(true);
+  state.ms=mi;
+  state.flowIdx=0;
+  state.ci=0; state.page=0;
+  state.redacted=new Set();
+  state.words=[];
+  state.chapterExtra=manuscripts[mi].chapters.map(()=>0);
+  state.picked=null;
+  state.pending=null;
+  if(mi===2){
+    const pool=[...loadFed()];
+    const fed=[];
+    while(fed.length<6 && pool.length) fed.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+    const fallback=["あめ","くらやみ","にわ","かみのけ","こども","ながぐつ"];
+    while(fed.length<6) fed.push(fallback[fed.length]);
+    state.fed=fed;
+  }
+  if(mi>0) state.name = loadName() || "校閲担当";
+  showMemo(0);
+}
+
+renderInbox();
+</script>
+</body>
+</html>

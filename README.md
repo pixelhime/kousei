@@ -11,8 +11,8 @@
 
 ## 遊ぶ
 
-公開URL（GitHub Pages 有効化後）:
-`https://<ユーザー名>.github.io/kousei/`
+公開URL:
+`https://pixelhime.github.io/kousei/`
 
 または `index.html` をブラウザで直接開いても遊べます（単一HTMLファイル・ビルド不要）。
 

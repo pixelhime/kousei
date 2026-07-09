@@ -76,6 +76,28 @@
   .card.locked{cursor:default;opacity:.45;}
   .card.locked:hover{transform:none;border-color:#4a4335;}
   #all-done{margin-top:6px;font-size:12px;letter-spacing:.3em;color:#8a8172;min-height:1.4em;}
+  #reset-zone{margin-top:20px;}
+  #btn-reset{background:none;border:1px solid #3a352c;color:#6b6353;font-size:12px;letter-spacing:.15em;text-indent:0;padding:8px 18px;}
+  #btn-reset:hover{background:#171410;color:#a89a78;}
+  #btn-reset.danger{border-color:#8a3a2c;color:#d99a8a;}
+  #btn-reset:disabled{opacity:.35;cursor:default;}
+  #s-title .ver{margin-top:16px;font-size:11px;letter-spacing:.3em;color:#4c4739;}
+  #hint-note{margin-top:2px;font-size:12px;letter-spacing:.12em;color:#7a7263;min-height:1.3em;}
+  .card .c-ends span.hintable{cursor:pointer;border-style:dashed;color:#8a7d55;transition:color .2s,background .2s;}
+  .card .c-ends span.hintable:hover{color:#d9b566;border-color:#8a7d55;background:#1a1610;}
+  #hintbox{position:fixed;inset:0;background:rgba(6,5,3,.82);display:none;align-items:center;justify-content:center;z-index:60;padding:0 6vw;}
+  #hintbox.on{display:flex;}
+  #hintbox .panel{width:min(92vw,460px);background:linear-gradient(175deg,#ece8dd,#e6dcc4);color:#33302a;padding:28px 32px 22px;box-shadow:0 18px 60px rgba(0,0,0,.7);}
+  #hintbox .hb-tag{font-size:12px;letter-spacing:.22em;color:#8a7250;border-bottom:1px solid #b7a980;padding-bottom:8px;margin-bottom:16px;display:flex;justify-content:space-between;}
+  #hintbox .hb-end{font-size:19px;letter-spacing:.2em;color:#a33327;margin-bottom:14px;}
+  #hintbox .hb-body{font-size:15px;line-height:2;letter-spacing:.04em;min-height:4em;}
+  #hintbox .hb-stage{margin-top:12px;font-size:11px;letter-spacing:.2em;color:#9d8f6a;}
+  #hintbox .hb-actions{margin-top:20px;display:flex;gap:12px;justify-content:center;}
+  #hintbox .hb-actions button{padding:9px 20px;font-size:13px;letter-spacing:.2em;background:#2a241b;color:#e7dcc4;border:1px solid #6b6353;}
+  #hintbox .hb-actions button:hover{background:#39301f;color:#f4ead3;}
+  #hintbox .hb-more{border-color:#8a3a2c!important;color:#e8b8a8!important;}
+  #hintbox .hb-more:disabled{opacity:.4;}
+  .memo .whisper{color:#7d6a45;border-left:2px solid #b7a980;padding-left:12px;}
 
   button{
     font-family:inherit;
@@ -224,8 +246,25 @@
   <div class="sub" id="title-sub">――消セ。</div>
   <div class="pub">鵜山書房　校閲部　受け取り箱</div>
   <div id="inbox"></div>
+  <div id="hint-note"></div>
   <div id="all-done"></div>
+  <div id="reset-zone"><button id="btn-reset">結末をすべて消して、最初から</button></div>
+  <div class="ver">ver 1.1</div>
 </section>
+
+<div id="hintbox">
+  <div class="panel">
+    <div class="hb-tag"><span>校閲メモ　――余白に</span><span id="hb-msname"></span></div>
+    <div class="hb-end" id="hb-end"></div>
+    <div class="hb-body" id="hb-body"></div>
+    <div class="hb-stage" id="hb-stage"></div>
+    <div class="hb-actions">
+      <button id="hb-prev">前のヒント</button>
+      <button class="hb-more" id="hb-more">もっと詳しく</button>
+      <button id="hb-close">閉じる</button>
+    </div>
+  </div>
+</div>
 
 <section id="s-memo"></section>
 
@@ -349,6 +388,7 @@ const manuscripts = [
       const saved = loadName();
       return `<div class="memo">${head}
       <p>例の回収本『雨の家』を、第二版として出し直すことになった。初版で騒ぎになった箇所は、墨消しで処理する。それが君の仕事だ。</p>
+      ${replayMemoHint("ms1")}
       <p class="rule">一、疑わしい語は、クリックで墨を入れる。<br>
       二、墨は、戻らない。よく読んでから消せ。<br>
       三、消しすぎた本は、本ではなくなる。</p>
@@ -484,6 +524,7 @@ const manuscripts = [
       <p>係争中の事件の獄中手記だ。著者は、妻殺しで起訴されている。……気づいたか。<b>『雨の家』の夫だ。</b>初版も第二版もうちが出した。その縁で、原稿がうちに来た。</p>
       <p>出す。出すが、裁判所と弁護士がうるさい。実名と地名は全て墨だ。</p>
       <p>それと――<b>あれの話</b>が、また出てくる。どう扱うかは、今回は君に任せる。残せば、狂人の書だ。消せば、罪を認めた男の書になる。</p>
+      ${replayMemoHint("ms2")}
       <div class="memo-actions"><button id="memo-next">原稿を開く</button></div></div>`;
     if(i===1) return `<div class="memo">${head}
       <p>受領した。手際は変わらず良い。</p>
@@ -587,6 +628,7 @@ const manuscripts = [
       <p>読めばわかる。読まなくても、わかるだろう。おまえの<span class="bar" data-w="${ws[1]}">████</span>でできている。</p>
       <p>校了印のない原稿は刷れない。だが印刷所が言うんだ。輪転機が、夜中に、ひとりで<span class="bar" data-w="${ws[2]}">████</span>と。</p>
       <p>頼む。終わらせてくれ。方法は、おまえがいちばん知っているはずだ。</p>
+      ${replayMemoHint("ms3")}
       <div class="memo-actions"><button id="memo-next">原稿を開く</button></div></div>`;
     }
     if(i===1) return `<div class="memo">${head}
@@ -982,12 +1024,134 @@ function unlocked(mi){
   return all[manuscripts[mi-1].key].length > 0;
 }
 
+/* ============ hints (v1.1) ============ */
+/* 各結末の段階ヒント：1=ぼかし → 2=こつ → 3=答え */
+const HINTS = {
+  ms1:{
+    seal:[
+      "名を持つ者は、呼ばれる。呼ばれた家に、あれは行く。",
+      "最終頁で編集長は「何も消すな」と念を押す。その言いつけに、逆らってみては。",
+      "奥付（最終章）で、あなた自身の名前――校閲担当の欄――を墨で消す。"],
+    reprint:[
+      "良い校閲者は、言われたことだけを、きちんとやる。",
+      "各章の指示された対象語だけを消し、余計な語も自分の名前も触らない。",
+      "対象語のみを消して進め、奥付では何もしない。最も素直な仕事。"],
+    black:[
+      "墨は、多いほど、何かを喜ばせる。",
+      "指示されていない普通の語まで、わざと消していく。編集長に「消しすぎだ」と叱られるほど。",
+      "自分の名前は残したまま、指示外の語を合計20語以上、墨で消す。"]
+  },
+  ms2:{
+    mercy:[
+      "呼べない者は、裁けない。",
+      "著者は自分の名を名乗る権利がある――が、名がなければ、被告は存在しない。",
+      "著者・若辺明彦の名前を、全4か所（各章＋奥付）すべて消す。"],
+    confess:[
+      "怪異を消せば、あとに残るのは、人の罪だけ。",
+      "『あれ』にまつわる文（庭の何か、連れて行かれた等）を、多く墨に沈める。",
+      "明彦の名は残したまま、あれの話に触れる文を5か所以上消す。"],
+    mad:[
+      "何も裁かず、ただ、そのまま世に出す。",
+      "あれの話も著者名も、ほとんど残して提出する。",
+      "実名だけ消し、あれの話は4か所以下しか消さず、著者名も残す（通常進行）。"]
+  },
+  ms3:{
+    done:[
+      "のどに刺さって、飲み込めないものが、ひとつだけある。",
+      "原稿は「それだけは消さないで」と懇願する。だが、それを抜くことが、終わり。",
+      "本文に現れるあなた自身の名前を『一語だけ』消す（ほかは何も消さない）。"],
+    cover:[
+      "いっそ、何もかも、黒く。",
+      "原稿のほとんどを墨で塗りつぶす。",
+      "全体の85%以上を消す。真っ黒な本になる。"],
+    first:[
+      "決めきれないのも、ひとつの答え。",
+      "名前も消さず、塗り潰しもせず、中途半端なまま終える。",
+      "自分の名前を消さず、消しすぎもしない（何もしない／数語だけ）で提出。"]
+  }
+};
+/* 案B：再校正時、編集長メモに足す“未取得エンドの仄めかし”（ヒントより控えめ） */
+const MEMO_HINTS = {
+  ms1:{
+    seal:"……時に、つかぬことを聞く。奥付の校閲担当欄、あれは空欄でも構わんと思わんか。名前など、結局はただの語だ。",
+    reprint:"基本を忘れるな。指示された語だけを、的確に。余計な墨は、一度、入れずにやってみろ。",
+    black:"たまにいるんだ。指示を無視して、片端から墨を入れる校閲者が。本が真っ黒になるまでな。止めはせんよ。"},
+  ms2:{
+    mercy:"契約では著者名はそのままだが……もし全て消えていたら、被告は誰でもなくなる。裁きようが、なくなるな。",
+    confess:"あれの話を残すか消すかは君次第だと言った。怪異をぜんぶ沈めれば、残るのは動機だけ。世間はそれを何と読む。",
+    mad:"あれの話をそのまま残せば、狂人の書として売れる。いちばん素直な出し方だ。"},
+  ms3:{
+    done:"終わらせる方法は、おまえがいちばん知っている。のどに刺さって飲み込めない、たった一語を、抜くことだ。",
+    cover:"いっそ全部、黒く塗ってしまう手もある。真っ黒な本。装丁としては、完璧だがな。",
+    first:"何もせず、そのまま刷る。それも答えのひとつだ。続きは、読者が書いてくれる。"}
+};
+
+function hintsUnlocked(){
+  const a = loadEndings();
+  return (a.ms1.length + a.ms2.length + a.ms3.length) >= 1;
+}
+function loadHintStage(){ try{ return JSON.parse(localStorage.getItem("kousei_hint")||"{}")||{}; }catch(e){ return {}; } }
+function saveHintStage(o){ try{ localStorage.setItem("kousei_hint", JSON.stringify(o)); }catch(e){} }
+
+let curHint = {ms:null, end:null, view:1};
+function openHint(ms, end){
+  const s = loadHintStage();
+  if(!s[ms+":"+end]){ s[ms+":"+end]=1; saveHintStage(s); }
+  curHint = {ms, end, view: Math.max(1, s[ms+":"+end]||1)};  // 前回まで開いた段階から
+  renderHint();
+  $("hintbox").classList.add("on");
+}
+function renderHint(){
+  const {ms,end,view} = curHint;
+  const arr = HINTS[ms][end];
+  const msObj = manuscripts.find(m=>m.key===ms);
+  const label = msObj.endDefs.find(d=>d[0]===end)[1];
+  $("hb-msname").textContent = msObj.no+"　"+msObj.bookLabel;
+  $("hb-end").textContent = "結末　"+label;
+  $("hb-body").textContent = arr[view-1];
+  $("hb-stage").textContent = "ヒント "+view+" ／ "+arr.length+"（押すほど、はっきりする）";
+  $("hb-prev").disabled = view<=1;
+  $("hb-more").disabled = view>=arr.length;
+  $("hb-more").textContent = view>=arr.length ? "これ以上はない" : "もっと詳しく";
+}
+$("hb-prev").onclick = ()=>{
+  if(curHint.view>1){ curHint.view--; renderHint(); }
+};
+$("hb-more").onclick = ()=>{
+  const arr = HINTS[curHint.ms][curHint.end];
+  if(curHint.view < arr.length){
+    curHint.view++;
+    const k = curHint.ms+":"+curHint.end;
+    const s = loadHintStage();
+    s[k] = Math.max(s[k]||1, curHint.view);   // 到達した最大段階を保存
+    saveHintStage(s);
+    renderHint();
+  }
+};
+$("hb-close").onclick = ()=> $("hintbox").classList.remove("on");
+$("hintbox").onclick = (e)=>{ if(e.target===$("hintbox")) $("hintbox").classList.remove("on"); };
+
+/* 案B：再校正メモの仄めかし一行（初回は出さない／全取得なら出さない） */
+function replayMemoHint(msKey){
+  const all = loadEndings();
+  const got = all[msKey]||[];
+  if(got.length===0 || got.length>=3) return "";
+  const ms = manuscripts.find(m=>m.key===msKey);
+  const missing = ms.endDefs.map(d=>d[0]).find(k=>!got.includes(k));
+  const line = missing && MEMO_HINTS[msKey] ? MEMO_HINTS[msKey][missing] : "";
+  return line ? `<p class="whisper">${line}</p>` : "";
+}
+
 function renderInbox(){
   const all = loadEndings();
+  const uh = hintsUnlocked();
   $("inbox").innerHTML = manuscripts.map((ms,mi)=>{
     const open = unlocked(mi);
-    const chips = ms.endDefs.map(([k,l])=>
-      `<span class="${all[ms.key].includes(k)?"got":""}">${all[ms.key].includes(k)?l:"？"}</span>`).join("");
+    const chips = ms.endDefs.map(([k,l])=>{
+      if(all[ms.key].includes(k)) return `<span class="got">${l}</span>`;
+      if(uh && open) return `<span class="hintable" data-msk="${ms.key}" data-end="${k}">？</span>`;
+      return `<span>？</span>`;
+    }).join("");
     if(!open){
       const hint = "（"+manuscripts[mi-1].no+"を校了せよ）";
       return `<div class="card locked"><div class="c-no">${ms.no}</div>
@@ -1001,11 +1165,16 @@ function renderInbox(){
   document.querySelectorAll("#inbox .card[data-ms]").forEach(c=>{
     c.onclick=()=>startManuscript(+c.dataset.ms);
   });
-  if(all.ms3.includes("done")){
-    $("title-sub").textContent="――校了。";
-    const total = all.ms1.length+all.ms2.length+all.ms3.length;
-    $("all-done").textContent = total>=9 ? "全結末、蒐集。おつかれさまでした。" : "受け取り箱は、空だ。";
-  }
+  document.querySelectorAll("#inbox .c-ends span.hintable").forEach(s=>{
+    s.onclick=(e)=>{ e.stopPropagation(); openHint(s.dataset.msk, s.dataset.end); };
+  });
+  const total = all.ms1.length+all.ms2.length+all.ms3.length;
+  $("hint-note").textContent = (uh && total<9)
+    ? "※ 未取得の「？」を押すと、校閲メモ（ヒント）が確認できる。" : "";
+  $("title-sub").textContent = all.ms3.includes("done") ? "――校了。" : "――消セ。";
+  $("all-done").textContent = total>=9 ? "全結末、蒐集。おつかれさまでした。" : "";
+  const hasSave = total>0 || !!loadName() || Object.keys(loadHintStage()).length>0;
+  $("btn-reset").disabled = !hasSave;
 }
 
 function startManuscript(mi){
@@ -1032,6 +1201,32 @@ function startManuscript(mi){
 }
 
 renderInbox();
+
+/* ---------- 全リセット（結末・ヒント・持ち越しを消して最初から） ---------- */
+let resetArmed=false, resetTimer=null;
+function disarmReset(){
+  resetArmed=false; clearTimeout(resetTimer);
+  const b=$("btn-reset"); b.classList.remove("danger"); b.textContent="結末をすべて消して、最初から";
+}
+$("btn-reset").onclick=()=>{
+  if($("btn-reset").disabled) return;
+  if(!resetArmed){
+    resetArmed=true;
+    const b=$("btn-reset");
+    b.classList.add("danger");
+    b.textContent="本当に消す？（もう一度）";
+    resetTimer=setTimeout(disarmReset,3000);
+    return;
+  }
+  clearTimeout(resetTimer); resetArmed=false;
+  ["kousei_endings2","kousei_endings","kousei_hint","kousei_words","kousei_name"]
+    .forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
+  renderInbox();
+  const b=$("btn-reset");
+  b.classList.remove("danger");
+  b.textContent="まっさらに、しました";
+  setTimeout(()=>{ b.textContent="結末をすべて消して、最初から"; },1600);
+};
 </script>
 </body>
 </html>
